@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "471697098828",
+    "project_id": "saaolhrm",
+    "storage_bucket": "saaolhrm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471697098828:android:fac1ee6a9ce6d867fd4ce9",
+        "android_client_info": {
+          "package_name": "com.example.SaaolHRM"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS0-7d9X44q2l-ch9Z4y3MDb3W8pO31Cs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
