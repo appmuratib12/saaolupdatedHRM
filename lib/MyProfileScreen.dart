@@ -434,6 +434,52 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ],
                           ),
                         ),
+                        /*GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) =>
+                                const LeaveApprovalScreen(),
+                              ),
+                            );
+                          },
+                          child: const Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_month,
+                                    size: 25,
+                                    color: AppColors.primaryColor,
+                                  ),
+                                  SizedBox(
+                                    width: 15,
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      'Leave Approval',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontFamily: 'FontPoppins',
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    color: Colors.black,
+                                    size: 14,
+                                  )
+                                ],
+                              ),
+                              Divider(
+                                height: 30,
+                                color: Colors.black87,
+                                thickness: 0.2,
+                              ),
+                            ],
+                          ),
+                        ),*/
                         GestureDetector(
                           onTap: () {
                             _showLogoutPopup(context);
@@ -465,7 +511,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ],
                           ),
                         ),
-
                       ],
                     ),
                   ),

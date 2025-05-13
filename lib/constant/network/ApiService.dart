@@ -221,8 +221,8 @@ class ApiService {
           await prefs.setString('TotalWorking Time', checkInResponse.totalWorkingTime ?? '');
           print('Total working time:${checkInResponse.totalWorkingTime}');
           print('TotalWorking Time response:${checkInResponse.totalWorkingTime}');
-          //await prefs.setString('Auto checkOut Time', checkInResponse.sessionEndTime ?? '');
-          await prefs.setString('Auto checkOut Time','15:00:00');
+          await prefs.setString('Auto checkOut Time', checkInResponse.sessionEndTime ?? '');
+          //await prefs.setString('Auto checkOut Time','16:20:00');
           print('SessionTime:${checkInResponse.sessionEndTime}');
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Row(
@@ -595,6 +595,7 @@ class ApiService {
     }
   }
 
+
   Future<void> autoCheckOut(String lat, String long,String sessionEndTime) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? validToken = prefs.getString('UserToken');
@@ -671,7 +672,6 @@ class ApiService {
   }
 
 
-
   /*Future<void> autoCheckOut(String lat, String long) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? validToken = prefs.getString('UserToken');
@@ -746,8 +746,6 @@ class ApiService {
       print('No valid token available');
     }
   }*/
-
-
 
   Future<void> feedback(String reason, List<File> images, BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -868,6 +866,7 @@ class ApiService {
     if (validToken != null) {
       String apiUrl = 'https://hrm.saaol.com/api/v1/livetracking';
       // ✅ Correct request format
+      print("📦 Sending tracking list: ${trackingList.map((e) => e.toJson()).toList()}");
       Map<String, dynamic> requestBody = {
         "tracking_data": trackingList.map((data) => data.toJson()).toList(),
       };
@@ -885,13 +884,16 @@ class ApiService {
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
           String message = jsonResponse['message'] ?? 'Live tracking data sent';
-          print('✅ GotLatLongResponse: $jsonResponse');
-          print('✅ Status: $message');
+          print('✅ Live Tracking Success → Response: $jsonResponse');
+          print('✅ Message: $message');
         } else if (response.statusCode == 401) {
           print('⚠️ Token expired. Please log in again.');
         } else {
           final jsonResponse = jsonDecode(response.body);
-          throw Exception(jsonResponse.containsKey('error') ? jsonResponse['error'] : 'Live tracking failed');
+          print('⚠️ Full Error Response: ${response.body}');
+          print('⚠️ Status Code: ${response.statusCode}');
+          print('⚠️ Error Message: ${jsonResponse['error'] ?? "Unknown error"}');
+          throw Exception(jsonResponse['error'] ?? 'Live tracking failed');
         }
       } catch (e) {
         print('⚠️ Error sending live tracking data: $e');
@@ -900,8 +902,5 @@ class ApiService {
       print('⚠️ No valid token available');
     }
   }
-
-
-
 }
 

@@ -1,40 +1,117 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 import 'constant/app_colors.dart';
 import 'constant/database/NotificationDatabase.dart';
 import 'data/requestdata/NotificationData.dart';
+import 'get_server_key.dart';
 
-
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+NotificationDatabase databaseHelper = NotificationDatabase.instance;
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Background message received: ${message.notification?.title}');
+  print('Background message received: ${message.notification}');
   if (message.notification != null) {
     final notification = NotificationData(
-      title: message.notification?.title,
-      body: message.notification?.body,
-      imageUrl: message.notification?.android?.imageUrl,
+      title: message.notification!.title!,
+      body: message.notification!.body!,
+      imageUrl: message.notification!.android!.imageUrl!,
     );
+    print("***$notification");
     await NotificationDatabase.instance.insertNotification(notification);
   }
 }
 
-Future<void> initializeNotifications(BuildContext context) async {
-  const AndroidInitializationSettings androidSettings =
-      AndroidInitializationSettings('@mipmap/ic_launcher'); // App icon
+Future<void> FirebaseMessage(String title, String subtitle) async {
+  String? deviceToken = await FirebaseMessaging.instance.getToken();
+  final get = get_server_key();
+  String token22222 = await get.server_token();
+  log('bearerToken: $token22222');
+  try {
+    final body = {
+      "message": {
+        "token": deviceToken,
+        "notification": {
+          "title": title,
+          "body": subtitle,
+          "image": ""
+          // URL of the image
+        },
+        "android": {
+          "notification": {
+            "sound": "muratibtone",
+            "channel_id": "custom_channel_id",
+            "image": "https://yt3.googleusercontent.com/TMw8wmvqfYG-eqcjsuC45PUqy0lCnpkXvAxoKnI-fEz7uShU7U3WKq7dH9piNVXPANjpauNq=s900-c-k-c0x00ffffff-no-rj"
+          }
+        },
+        "apns": {
+          "payload": {
+            "aps": {"sound": "muratibtone.mp3", "mutable-content": 1}
+          },
+          "fcm_options": {
+            "image": "https://yt3.googleusercontent.com/TMw8wmvqfYG-eqcjsuC45PUqy0lCnpkXvAxoKnI-fEz7uShU7U3WKq7dH9piNVXPANjpauNq=s900-c-k-c0x00ffffff-no-rj"
+          }
+        },
+        "data": {
+          "screen": "second",
+          "title": title,
+          "body": subtitle,
+          "image": "https://yt3.googleusercontent.com/TMw8wmvqfYG-eqcjsuC45PUqy0lCnpkXvAxoKnI-fEz7uShU7U3WKq7dH9piNVXPANjpauNq=s900-c-k-c0x00ffffff-no-rj"
+        },
+      }
+    };
 
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: androidSettings);
+    const projectID = 'saaolhrmapp-cf6b9';
+    final get = get_server_key();
+    String token22222 = await get.server_token();
+    log('bearerToken: $token22222');
+    if (token22222 == null) return;
+
+    var res = await http.post(
+      Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/$projectID/messages:send'),
+      headers: {
+        HttpHeaders.contentTypeHeader: 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer $token22222'
+      },
+      body: jsonEncode(body),
+    );
+
+    log('Response status: ${res.statusCode}');
+    log('Response body: ${res.body}');
+  } catch (e) {
+    log('\nsendPushNotificationE: $e');
+  }
+}
+
+Future<void> initializeNotifications() async {
+  const AndroidInitializationSettings androidSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
+  );
+
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: androidSettings,
+    iOS: iosSettings,
+  );
 
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) async {
       if (response.payload != null) {
-        // Decode payload to extract notification data
         final payloadParts = response.payload?.split('|');
+        print("SKNDNNSDNDKN$payloadParts");
         if (payloadParts != null && payloadParts.length == 3) {
           final notification = NotificationData(
             title: payloadParts[0],
@@ -42,11 +119,6 @@ Future<void> initializeNotifications(BuildContext context) async {
             imageUrl: payloadParts[2],
           );
           await NotificationDatabase.instance.insertNotification(notification);
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const NotificationScreen(),
-            ),
-          );
         }
       }
     },
@@ -60,9 +132,9 @@ Future<void> showNotification({
 }) async {
   const AndroidNotificationDetails androidNotificationDetails =
       AndroidNotificationDetails(
-    'channel_id', // Unique channel ID
-    'Channel Name', // Channel name for Android settings
-    channelDescription: 'This is a test channel', // Optional description
+    'channel_id',
+    'Channel Name',
+    channelDescription: 'This is a test channel',
     importance: Importance.max,
     priority: Priority.high,
   );
@@ -74,36 +146,61 @@ Future<void> showNotification({
       '${title ?? 'No Title'}|${body ?? 'No Body'}|${imageUrl ?? ''}';
 
   await flutterLocalNotificationsPlugin.show(
-    0, // Notification ID
-    title ?? 'No Title', // Notification title
-    body ?? 'No Body', // Notification body
+    0,
+    title ?? 'No Title',
+    body ?? 'No Body',
     notificationDetails,
-    payload: payload, // Additional data
+    payload: payload,
   );
 }
 
 Future<void> setupFCM(BuildContext context) async {
-  await FirebaseMessaging.instance.requestPermission();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
 
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-    print('Foreground message received: ${message.notification?.title}');
+    print('📲 Foreground message received: ${message.notification?.title}');
+
     if (message.notification != null) {
+      final DateTime now = DateTime.now();
+      final String formattedDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);
+
+      String? imageUrl = message.notification?.android?.imageUrl ??
+          message.notification?.apple?.imageUrl ??
+          "";
+
       final notification = NotificationData(
-        title: message.notification?.title,
-        body: message.notification?.body,
-        imageUrl: message.notification?.android?.imageUrl,
+        title: message.notification!.title ?? "",
+        body: message.notification!.body ?? "",
+        imageUrl: imageUrl,
+        //  currentDate: formattedDate,
       );
+
       await NotificationDatabase.instance.insertNotification(notification);
-      showNotification(
-        title: message.notification?.title,
-        body: message.notification?.body,
-        imageUrl: message.notification?.android?.imageUrl,
+      await showNotification(
+        title: message.notification?.title ?? "",
+        body: message.notification?.body ?? "",
+        imageUrl: imageUrl,
       );
     }
   });
-  String? token = await FirebaseMessaging.instance.getToken();
-  print('FCM Token: $token');
+
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  if (Platform.isIOS) {
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    String? apnsToken = await messaging.getAPNSToken();
+    print('🔑 APNS Token: $apnsToken');
+  }
+  String? token = await messaging.getToken();
+  print('🔑 FCM Token: $token');
 }
 
 class NotificationScreen extends StatefulWidget {
@@ -119,23 +216,23 @@ class NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    _notifications = NotificationDatabase.instance.fetchNotifications();
+
+    _notifications = databaseHelper.fetchNotifications();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ensure setup is only called once
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setupFCM(context);
-      initializeNotifications(context);
+      initializeNotifications();
     });
+    _notifications = databaseHelper.fetchNotifications();
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primaryColor,
         title: const Text(
-          "Notification",
+          'Notification',
           style: TextStyle(
             fontFamily: 'FontPoppins',
             fontSize: 18,
@@ -144,15 +241,13 @@ class NotificationScreenState extends State<NotificationScreen> {
             color: Colors.white,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-            size: 20,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         centerTitle: true,
+        leading: IconButton(
+            icon:
+                const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+            onPressed: () {
+              Navigator.pop(context);
+            }),
       ),
       body: FutureBuilder<List<NotificationData>>(
         future: _notifications,
@@ -166,8 +261,8 @@ class NotificationScreenState extends State<NotificationScreen> {
               style: TextStyle(
                   fontFamily: 'FontPoppins',
                   fontWeight: FontWeight.w500,
-                  fontSize: 17,
-                  color: AppColors.primaryColor),
+                  fontSize: 15,
+                  color: Colors.black87),
             ));
           } else {
             return ListView.builder(
@@ -181,7 +276,6 @@ class NotificationScreenState extends State<NotificationScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10), // Rounded corners
                     side: BorderSide(
-                      // Adds a border
                       color: Colors.grey.shade400, // Border color
                       width: 1.0, // Border width
                     ),
@@ -221,7 +315,7 @@ class NotificationScreenState extends State<NotificationScreen> {
                                 style: const TextStyle(
                                   fontFamily: 'FontPoppins',
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   color: Colors.black,
                                 ),
                                 maxLines: 2,
@@ -233,7 +327,7 @@ class NotificationScreenState extends State<NotificationScreen> {
                                 style: const TextStyle(
                                   fontFamily: 'FontPoppins',
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   color: Colors.black54,
                                 ),
                                 softWrap: true,

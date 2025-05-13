@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:saaolhrmapp/LeaveApprovalScreen.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'constant/app_colors.dart';
-
 
 class LeaveRequestScreen extends StatefulWidget {
   const LeaveRequestScreen({super.key});
@@ -10,8 +11,7 @@ class LeaveRequestScreen extends StatefulWidget {
 }
 
 class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
-  List<String> titleArrays = ["Casual", "Sick Leave.", 'Emergency leave',"Paid Leave"];
-
+  List<String> titleArrays = ["Casual","Sick Leave",'Emergency leave',"Paid Leave"];
 
   void _showTitlePickerDialog() {
     showDialog(
@@ -22,7 +22,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           title: const Text(
-            'Select Title',
+            'Select Leave Type',
             style: TextStyle(
               fontFamily: 'FontPoppins',
               fontSize: 20,
@@ -64,43 +64,126 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   final TextEditingController startDateController = TextEditingController();
   final TextEditingController endDateController = TextEditingController();
   TextEditingController reasonController = TextEditingController();
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
+  List<DateTime> _selectedDates = [];
+  final Map<DateTime, String> _daySelections = {};
+  void _showDatePickerDialog() {
+    showDialog(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryColor, // Header background color
-              onPrimary: Colors.white, // Header text color
-              onSurface: Colors.black, // Body text color
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Dates',style:TextStyle(
+            color: Colors.black87,
+            fontSize:18,
+            fontFamily:'FontPoppins',
+            fontWeight: FontWeight.w500,
+          ),),
+          backgroundColor:Colors.grey[200],
+          content: Container(
+            height: 400,
+            child: SfDateRangePicker(
+              selectionMode: DateRangePickerSelectionMode.multiple,
+              minDate: DateTime.now(),
+              initialSelectedDates: _selectedDates,
+              backgroundColor:Colors.grey[200],
+              headerStyle: DateRangePickerHeaderStyle(
+                backgroundColor: Colors.grey[200], // Header color
+                textStyle: const TextStyle(
+                  color: Colors.black87,
+                  fontSize:14,
+                  fontFamily:'FontPoppins',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              selectionColor: AppColors.primaryColor,
+              todayHighlightColor:AppColors.primaryColor,
+              onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+                if (args.value is List<DateTime>) {
+                  List<DateTime> selectedDatesNow = args.value;
+                  setState(() {
+                    for (var date in selectedDatesNow) {
+                      _daySelections.putIfAbsent(date, () => 'Full Day');
+                    }
+                    _daySelections.removeWhere((key, value) => !selectedDatesNow.contains(key));
+                    _selectedDates = selectedDatesNow;
+                  });
+                }
+              },
             ),
-            dialogBackgroundColor: Colors.lightBlue.shade50, // Background color of the calendar
           ),
-          child: child!,
+          actions: [
+            TextButton(
+              child: const Text("Done",style:TextStyle(fontWeight:FontWeight.w500,
+                  fontSize:15,fontFamily:'FontPoppins',color:Colors.black87),),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
         );
       },
     );
-    if (picked != null) {
-      setState(() {
-        // Set the selected date to the corresponding controller
-        if (isStartDate) {
-          startDateController.text = "${picked.day}-${picked.month}-${picked.year}";
-        } else {
-          endDateController.text = "${picked.day}-${picked.month}-${picked.year}";
-        }
-      });
-    }
   }
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
+  Widget _buildDayOption(DateTime date) {
+    String selected = _daySelections[date] ?? 'Full Day';
+
+    return Padding(padding: const EdgeInsets.all(5),child:Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
+          style: const TextStyle(fontWeight: FontWeight.w600,
+              fontSize:15,fontFamily:'FontPoppins',color:Colors.black),
+        ),
+        Row(
+          children: [
+            Radio<String>(
+              value: 'Full Day',
+              groupValue: selected,
+              onChanged: (value) {
+                setState(() => _daySelections[date] = value!);
+              },
+              activeColor: Colors.orange,
+            ),
+            const Text('Full Day',style:TextStyle(fontWeight:FontWeight.w500,
+                fontSize:11,fontFamily:'FontPoppins',color:Colors.black),),
+            Radio<String>(
+              value: 'First Half',
+              groupValue: selected,
+              onChanged: (value) {
+                setState(() => _daySelections[date] = value!);
+              },
+              activeColor: Colors.orange,
+            ),
+            const Text('First Half',style:TextStyle(fontWeight:FontWeight.w500,
+                fontSize:11,fontFamily:'FontPoppins',color:Colors.black),),
+            Radio<String>(
+              value: 'Second Half',
+              groupValue: selected,
+              onChanged: (value) {
+                setState(() => _daySelections[date] = value!);
+              },
+              activeColor: Colors.orange,
+            ),
+            const Text('Second Half',style:TextStyle(fontWeight:FontWeight.w500,
+                fontSize:11,fontFamily:'FontPoppins',color:Colors.black),),
+          ],
+        ),
+         Divider(
+          color:AppColors.primaryColor.withOpacity(0.8),
+           thickness:0.5,
+           height:15,
+        ),
+      ],
+    ),
+    );
+  }
 
 
   @override
   Widget build(BuildContext context) {
+    String dateString = _selectedDates.map((d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}').join(', ');
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.primaryColor,
@@ -130,14 +213,14 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           child:Column(crossAxisAlignment:CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Form(key:_formKey,
+               Form(key:_formKey,
               autovalidateMode:AutovalidateMode.always,
               child:Column(crossAxisAlignment:CrossAxisAlignment.start,
               mainAxisAlignment:MainAxisAlignment.start,
               children: [
-                const Text('Leave Type',
+                const Text('Leave Type*',
                   style:TextStyle(fontWeight:FontWeight.w600,
-                      fontFamily:'FontPoppins',fontSize:16,color:Colors.black),),
+                      fontFamily:'FontPoppins',fontSize:15,color:Colors.black),),
                 const SizedBox(height:10,),
                 GestureDetector(
                   onTap: _showTitlePickerDialog,
@@ -147,7 +230,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                       child: DropdownButtonFormField<String>(
                         value: selectTitle,
                         decoration: InputDecoration(
-                          hintText: 'Leave Type',
+                          hintText: 'Select Leave Type',
                           hintStyle: const TextStyle(
                             fontFamily: 'FontPoppins',
                             fontSize: 14,
@@ -169,7 +252,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                             color: Colors.black,
                             fontSize: 15,
                             fontFamily: 'FontPoppins',
-                            fontWeight: FontWeight.w600),
+                            fontWeight: FontWeight.w500),
                         items: titleArrays
                             .map((gender) => DropdownMenuItem<String>(
                           value: gender,
@@ -187,201 +270,130 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height:10,),
-                const Text('Leave Mode',
-                  style:TextStyle(fontWeight:FontWeight.w600,
-                      fontFamily:'FontPoppins',fontSize:16,color:Colors.black87),),
-                const SizedBox(height: 12),
-                Row(crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _buildRadioOption("Full Day"),
-                    _buildRadioOption("First Half"),
-                    _buildRadioOption("Second"),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text('Choose the Date',
-                  style:TextStyle(fontWeight:FontWeight.w600,
-                      fontFamily:'FontPoppins',fontSize:16,color:Colors.black87),),
                 const SizedBox(height:15),
-                const Text(
-                  "Start Date",
-                  style: TextStyle(fontSize:15, fontWeight: FontWeight.w500,fontFamily:'FontPoppins',color:Colors.black87),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  readOnly: true,
-                  controller: startDateController,
-                  decoration: InputDecoration(
-                    hintText: 'Start Date',
-                    hintStyle: const TextStyle(
-                      fontFamily: 'FontPoppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black54,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius:
-                      BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding:
-                    const EdgeInsets.symmetric(
-                      vertical: 15.0,
-                      horizontal: 20.0,
-                    ),
-                    filled: true,
-                    fillColor:AppColors.primaryColor.withOpacity(0.3),
-                    suffixIcon: IconButton(
-                      icon: const Icon(
-                        Icons.calendar_month,
-                        color: AppColors.primaryColor,
-                      ),
-                      onPressed: () =>  _selectDate(context,true),
-                    ),
-                  ),
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontFamily: 'FontPoppins',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "End Date",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500,fontFamily:'FontPoppins',color:Colors.black87),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  readOnly: true,
-                  controller:endDateController,
-                  decoration: InputDecoration(
-                    hintText: 'End Date',
-                    hintStyle: const TextStyle(
-                      fontFamily: 'FontPoppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black54,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius:
-                      BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding:
-                    const EdgeInsets.symmetric(
-                      vertical: 15.0,
-                      horizontal: 20.0,
-                    ),
-                    filled: true,
-                    fillColor:AppColors.primaryColor.withOpacity(0.3),
-                    suffixIcon: IconButton(
-                      icon: const Icon(
-                        Icons.calendar_month,
-                        color: AppColors.primaryColor,
-                      ),
-                      onPressed: () =>  _selectDate(context,true),
-                    ),
-                  ),
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontFamily: 'FontPoppins',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text('Reason',
-                  style:TextStyle(fontWeight:FontWeight.w600,
-                      fontFamily:'FontPoppins',fontSize:16,color:Colors.black87),),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: reasonController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: "Enter your reason",
-                    hintStyle:const TextStyle(fontWeight:FontWeight.w500,fontFamily:'FontPoppins',fontSize:15,color:Colors.black54),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                        color: AppColors.primaryColor, // Change this to your desired color
-                        width: 1.0, // Adjust the width if necessary
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide:  const BorderSide(
-                        color:AppColors.primaryColor, // Change this to your desired color for normal state
-                        width: 1.0, // Adjust the width if necessary
-                      ),
-                    ),
-
-                  ),
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
-                    fontFamily: 'FontPoppins',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height:16),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height:48,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: const BorderSide(color: Colors.white, width: 0.1),
-                      ),
-                    ),
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(
-                        fontFamily: 'FontPoppins',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
               ],
              ),
             ),
+               Column(crossAxisAlignment:CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Align(alignment: Alignment.centerLeft,
+                    child: Text("Select Multiple Dates: *",style: TextStyle(fontSize:15,
+                    fontWeight: FontWeight.w600,
+                    fontFamily:'FontPoppins',color:Colors.black),)),
+                const SizedBox(height:15),
+                InkWell(
+                  onTap: _showDatePickerDialog,
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color:AppColors.primaryColor.withOpacity(0.3),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text(dateString.isEmpty ? "Select Dates" :
+                        dateString,style: const TextStyle(fontWeight:FontWeight.w500,fontSize:14,
+                            fontFamily:'FontPoppins',color:Colors.black),)),
+                        const Icon(Icons.calendar_month,size:18,color:AppColors.primaryColor),
 
-          ],
-         ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ..._selectedDates.map(_buildDayOption).toList(),
+              ],
+             ),
+               const Text('Number of Leave days*',
+              style:TextStyle(fontWeight:FontWeight.w600,
+                  fontFamily:'FontPoppins',fontSize:15,color:Colors.black),),
+               const SizedBox(height:15),
+               Container(
+                 height:55,
+                 padding:const EdgeInsets.all(18),
+                 width:MediaQuery.of(context).size.width,
+                 decoration:BoxDecoration(
+                   color:AppColors.primaryColor.withOpacity(0.3),
+                   borderRadius:BorderRadius.circular(10)
+                 ),
+                 child:Text('${_selectedDates.length}',
+                   style:const TextStyle(fontWeight:FontWeight.w500,
+                       fontSize:15,fontFamily:'FontPoppins',color:Colors.black),),
+
+               ),
+            const SizedBox(height:15),
+            const Text('Leave Reason*',
+              style:TextStyle(fontWeight:FontWeight.w600,
+                  fontFamily:'FontPoppins',fontSize:16,color:Colors.black87),),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: reasonController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: "Enter your leave reason",
+                hintStyle:const TextStyle(fontWeight:FontWeight.w500,fontFamily:'FontPoppins',fontSize:15,color:Colors.black54),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: AppColors.primaryColor, // Change this to your desired color
+                    width: 1.0, // Adjust the width if necessary
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide:  const BorderSide(
+                    color:AppColors.primaryColor, // Change this to your desired color for normal state
+                    width: 1.0, // Adjust the width if necessary
+                  ),
+                ),
+
+              ),
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 15,
+                fontFamily: 'FontPoppins',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height:16),
+            SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height:45,
+              child: ElevatedButton(
+                onPressed: () async {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LeaveApprovalScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: const BorderSide(color: Colors.white, width: 0.1),
+                  ),
+                ),
+                child: const Text(
+                  'Submit',
+                  style: TextStyle(
+                    fontFamily: 'FontPoppins',
+                    fontSize: 18,
+                    letterSpacing:0.3,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+           ],
+          ),
         ),
       ),
     );
   }
-  Widget _buildRadioOption(String value) {
-    return Row(
-      children: [
-        Radio<String>(
-          value: value,
-          groupValue: selectedValue,
-          onChanged: (newValue) {
-            setState(() {
-              selectedValue = newValue!;
-            });
-          },
-          activeColor: Colors.orange, // Selected radio button color
-        ),
-        Text(
-          value,
-          style: const TextStyle(fontSize:14,fontWeight:FontWeight.w500,fontFamily:'FontPoppins',color:Colors.black87), // Adjust the font size
-        ),
-      ],
-    );
-  }
 }
+

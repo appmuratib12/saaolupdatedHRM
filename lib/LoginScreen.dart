@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:saaolhrmapp/BottomNavigationScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'NotificationScreen.dart';
 import 'constant/ConstantValues.dart';
 import 'constant/ValidationCons.dart';
 import 'constant/app_colors.dart';
 import 'constant/network/ApiService.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -69,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
-
 
   Future<void> getDeviceInfo() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -168,6 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.green,
           ),
         );
+        FirebaseMessage('Welcome to SAAOL HRM','You have login successfully!');
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
