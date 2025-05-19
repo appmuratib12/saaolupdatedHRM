@@ -16,7 +16,7 @@ class CheckInResponse {
 
   CheckInResponse.fromJson(Map<String, dynamic> json) {
     message = json['message'];
-    distance = json['distance'];
+    distance = json['distance'] != null ? (json['distance'] as num).toDouble() : null;
     totalWorkingTime = json['total_working_time'];
     centerLat = json['center_lat'];
     centerLong = json['center_long'];

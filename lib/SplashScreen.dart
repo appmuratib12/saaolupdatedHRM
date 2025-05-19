@@ -2,7 +2,6 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:saaolhrmapp/BottomNavigationScreen.dart';
-import 'package:saaolhrmapp/UserProfileScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'LoginScreen.dart';
 import 'constant/app_colors.dart';
@@ -25,7 +24,6 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkLoginStatus();
   }
 
-
   Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
@@ -35,6 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
           : const LoginScreen();
     });
   }
+
 
   @override
   Widget build(BuildContext context) {

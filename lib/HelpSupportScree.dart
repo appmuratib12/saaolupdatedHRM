@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'constant/app_colors.dart';
 import 'constant/network/ApiService.dart';
@@ -68,9 +69,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       });
     }
   }
-
-
-
   Future<File?> compressImage(File file) async {
     final dir = await getTemporaryDirectory();
     final targetPath =
@@ -84,8 +82,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
     return result != null ? File(result.path) : null;
   }
-
-  // Show SnackBar
   void showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -127,7 +123,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     });
   }
 
-
   Future<void> submitFeedback() async {
     String reason = reasonController.text.trim();
     if (reason.isEmpty) {
@@ -145,9 +140,44 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   }
 
+  void launchEmail() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'mohdmuratib0@gmail.com',
+      query: 'subject=Support Request&body=Hi, I need help with...',
+    );
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      print('Could not launch email client');
+
+    }
+  }
+
+  void _makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri.parse('tel:$phoneNumber');
+
+    if (!await launchUrl(phoneUri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $phoneUri';
+    }
+  }
+  void _sendEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: Uri.encodeFull('subject=Hello&body=I would like to contact you'),
+    );
+
+    if (!await launchUrl(emailUri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $emailUri';
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:Colors.grey[200],
       appBar: AppBar(
         backgroundColor: AppColors.primaryColor,
         title: const Text(
@@ -177,41 +207,86 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Frequently Asked Questions",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'FontPoppins',
-                      color: Colors.black)),
-              const SizedBox(height: 10),
-              ListView.builder(
-                itemCount: faqs.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return ExpansionTile(
-                    title: Text(faqs[index]['question']!,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'FontPoppins',
-                            fontSize: 15,
-                            color: Colors.black87)),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          faqs[index]['answer']!,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'FontPoppins',
-                              fontSize: 15,
-                              color: Colors.black54),
-                        ),
-                      )
-                    ],
-                  );
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: const Image(
+                      image: AssetImage('assets/images/help_and_support.png'),
+                      fit: BoxFit.cover,
+                      width: 90,
+                      height: 90,
+                    ),
+                  ),
+                  const SizedBox(width:20), // spacing between image and text
+                  const Expanded(
+                    child: Text(
+                      'Hello, How can we\nhelp you?',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'FontPoppins',
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(
+                height: 20,
+              ),
+
+              Row(mainAxisAlignment:MainAxisAlignment.spaceAround,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      _makePhoneCall('9318404512');
+                    },
+                    icon:  const Icon(Icons.call, color: AppColors.primaryColor),
+                    label:  const Text(
+                      'Call',
+                      style: TextStyle(
+                        fontFamily: 'FontPoppins',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: AppColors.primaryColor,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor:Colors.white,
+                      side:  BorderSide(color: AppColors.primaryColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      _sendEmail('info@saaolinfotech.com');
+                    },
+                    icon:  const Icon(Icons.directions, color: AppColors.primaryColor),
+                    label:  const Text(
+                      'Email',
+                      style: TextStyle(
+                        fontFamily: 'FontPoppins',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: AppColors.primaryColor,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor:Colors.white,
+                      side:  const BorderSide(color: AppColors.primaryColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height:15,),
               const Divider(
                 thickness: 1,
                 color: AppColors.gradientBG,
@@ -222,7 +297,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                 style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontFamily: 'FontPoppins',
-                    fontSize: 16,
+                    fontSize: 15,
                     color: Colors.black87),
               ),
               const SizedBox(height: 15),
@@ -289,7 +364,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                   const Text(
                     'Add & Upload Images',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize:14,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                         fontFamily: 'FontPoppins'),

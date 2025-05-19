@@ -75,14 +75,84 @@ class _AllCheckInActivityState extends State<AllCheckInActivity> {
               ),
             );
           } else if (snapshot.hasError) {
-            print('Error fetching data: ${snapshot.error}');
-            return Center(child: Text('Error: ${snapshot.error}'));
+            final errorMessage = snapshot.error.toString();
+            if (errorMessage.contains('No internet connection')) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.wifi_off_rounded,
+                        size:30,
+                        color: Colors.redAccent,
+                      ),
+                      SizedBox(height:8),
+                      Text(
+                        'No Internet Connection',
+                        style: TextStyle(
+                          fontSize:14,
+                          fontFamily: 'FontPoppins',
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'Please check your network settings and try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize:12,
+                          fontFamily: 'FontPoppins',
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return Center(child: Text('Error: $errorMessage'));
+            }
           } else if (!snapshot.hasData ||
               snapshot.data!.userActivity == null ||
               snapshot.data!.userActivity!.isEmpty) {
-            return const Center(child: Text('No Check-in Activity Available.',
-              style:TextStyle(fontWeight:FontWeight.w500,fontFamily:'FontPoppins',
-                  fontSize:16,color:Colors.black87),));
+               return  const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 12),
+                    Icon(
+                        Icons.hourglass_empty,
+                        size:40,
+                        color:AppColors.primaryColor
+                    ),
+                    SizedBox(height:10),
+                    Text(
+                      'No Check-in Activity Available.',
+                      style: TextStyle(
+                        fontSize:15,
+                        fontFamily: 'FontPoppins',
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Please check back later.\nNew data will be available soon!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize:12,
+                        fontFamily: 'FontPoppins',
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
           } else {
             final activityData = snapshot.data!.userActivity!;
             firstLogin = snapshot.data!.firstLoginTime;

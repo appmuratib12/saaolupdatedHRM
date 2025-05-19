@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:saaolhrmapp/BottomNavigationScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'NotificationScreen.dart';
 import 'constant/ConstantValues.dart';
 import 'constant/ValidationCons.dart';
 import 'constant/app_colors.dart';
 import 'constant/network/ApiService.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -46,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
+
   Future<void> _saveCredentials() async {
     if (_rememberMe) {
       await _secureStorage.write(key: "username", value: userNameController.text);
@@ -69,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
-
 
   Future<void> getDeviceInfo() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -168,6 +170,8 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.green,
           ),
         );
+        FirebaseMessage('Welcome to SAAOL HRM','You have login successfully!');
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -231,13 +235,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        physics: const ScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Container(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child:Container(
               padding: const EdgeInsets.only(top: 60, left: 5, right: 5),
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
@@ -249,231 +250,265 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Center(
-                    child: Image(
-                      image: AssetImage('assets/images/saool_logo.png'),
-                      width: 120,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  const Center(
-                    child: Text(
-                      'HRM Login',
-                      style: TextStyle(
-                          fontFamily: 'FontPoppins',
-                          fontSize: 23,
-                          letterSpacing: 0.3,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white),
-                    ),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 10, right: 10, top: 40),
-                    child: Card(
-                      color: Colors.white,
-                      elevation: 1, // Adds shadow to the card
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            15), // Rounded corners for the card
+              child: SingleChildScrollView(
+                child:Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Center(
+                      child: Image(
+                        image: AssetImage('assets/images/saool_logo.png'),
+                        width: 120,
+                        height: 100,
+                        fit: BoxFit.cover,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 15, left: 12, right: 12, bottom: 10),
-                        // Inner padding for the card content
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Form(
-                              key: _formKey,
-                              autovalidateMode: autovalidateMode,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Username',
-                                    style: TextStyle(
-                                        fontFamily: 'FontPoppins',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  TextFormField(
-                                    keyboardType: TextInputType.name,
-                                    controller: userNameController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter your username',
-                                      hintStyle: const TextStyle(
+                    ),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    const Center(
+                      child: Text(
+                        'HRM Login',
+                        style: TextStyle(
+                            fontFamily: 'FontPoppins',
+                            fontSize: 23,
+                            letterSpacing: 0.3,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white),
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                      const EdgeInsets.only(left: 10, right: 10, top: 40),
+                      child: Card(
+                        color: Colors.white,
+                        elevation: 1, // Adds shadow to the card
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              15), // Rounded corners for the card
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              top: 15, left: 12, right: 12, bottom: 10),
+                          // Inner padding for the card content
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Form(
+                                key: _formKey,
+                                autovalidateMode: autovalidateMode,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Username',
+                                      style: TextStyle(
                                           fontFamily: 'FontPoppins',
                                           fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black54),
-                                      prefixIcon: const Icon(Icons.contact_page,
-                                          color: AppColors.primaryColor),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(15.0),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 15.0, horizontal: 20.0),
-                                      filled: true,
-                                      fillColor: Colors.orange[50],
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black),
                                     ),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'FontPoppins',
-                                        fontSize: 16,
-                                        color: Colors.black),
-                                    validator: ValidationCons().validateName,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    'Password',
-                                    style: TextStyle(
-                                        fontFamily: 'FontPoppins',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    controller: userPasswordController,
-                                    obscureText: _obscureText,
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter password',
-                                      hintStyle: const TextStyle(
-                                          fontFamily: 'FontPoppins',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.black54),
-                                      prefixIcon: const Icon(Icons.lock,
-                                          color: AppColors.primaryColor),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscureText
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: AppColors.primaryColor,
+                                    const SizedBox(height: 10),
+                                    TextFormField(
+                                      keyboardType: TextInputType.name,
+                                      controller: userNameController,
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter your username',
+                                        hintStyle: const TextStyle(
+                                            fontFamily: 'FontPoppins',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.black54),
+                                        prefixIcon: const Icon(Icons.contact_page,
+                                            color: AppColors.primaryColor),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(15.0),
+                                          borderSide: BorderSide.none,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscureText = !_obscureText;
-                                          });
-                                        },
+                                        contentPadding:
+                                        const EdgeInsets.symmetric(
+                                            vertical: 15.0, horizontal: 20.0),
+                                        filled: true,
+                                        fillColor: Colors.orange[50],
                                       ),
-                                      filled: true,
-                                      fillColor: Colors.orange[50],
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(15),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 15.0, horizontal: 20.0),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'FontPoppins',
+                                          fontSize: 16,
+                                          color: Colors.black),
+                                      validator: ValidationCons().validateName,
                                     ),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'FontPoppins',
-                                        fontSize: 16,
-                                        color: Colors.black),
-                                    validator:
-                                        ValidationCons().validatePassword,
+                                    const SizedBox(height: 10),
+                                    const Text(
+                                      'Password',
+                                      style: TextStyle(
+                                          fontFamily: 'FontPoppins',
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    TextFormField(
+                                      keyboardType: TextInputType.text,
+                                      controller: userPasswordController,
+                                      obscureText: _obscureText,
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter password',
+                                        hintStyle: const TextStyle(
+                                            fontFamily: 'FontPoppins',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.black54),
+                                        prefixIcon: const Icon(Icons.lock,
+                                            color: AppColors.primaryColor),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscureText
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: AppColors.primaryColor,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscureText = !_obscureText;
+                                            });
+                                          },
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.orange[50],
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(15),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        contentPadding:
+                                        const EdgeInsets.symmetric(
+                                            vertical: 15.0, horizontal: 20.0),
+                                      ),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'FontPoppins',
+                                          fontSize: 16,
+                                          color: Colors.black),
+                                      validator:
+                                      ValidationCons().validatePassword,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height:20),
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        _rememberMe = newValue!;
+                                      });
+                                    },
+                                    activeColor: AppColors.primaryColor,
+                                  ),
+                                  const Text(
+                                    "Remember Me",
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
+                                      fontFamily:'FontPoppins',color:Colors.black87,),
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height:20),
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: _rememberMe,
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      _rememberMe = newValue!;
-                                    });
-                                  },
-                                  activeColor: AppColors.primaryColor,
-                                ),
-                                const Text(
-                                  "Remember Me",
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
-                                      fontFamily:'FontPoppins',color:Colors.black87,),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height:20),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width,
-                              height: 50,
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color.fromARGB(200, 253, 106, 111),
-                                      Color.fromARGB(200, 255, 155, 68),
-                                    ],
-                                  ),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(15)),
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      _formKey.currentState!.save();
-                                      userLogin();
-                                    } else {
-                                      setState(() {
-                                        autovalidateMode =
-                                            AutovalidateMode.always;
-                                      });
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                      side: const BorderSide(
-                                          color: Colors.white, width: 0.1),
+                              const SizedBox(height:20),
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: 50,
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color.fromARGB(200, 253, 106, 111),
+                                        Color.fromARGB(200, 255, 155, 68),
+                                      ],
                                     ),
+                                    borderRadius:
+                                    BorderRadius.all(Radius.circular(15)),
                                   ),
-                                  child: const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontFamily: 'FontPoppins',
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      if (_formKey.currentState!.validate()) {
+                                        _formKey.currentState!.save();
+                                        userLogin();
+                                      } else {
+                                        setState(() {
+                                          autovalidateMode =
+                                              AutovalidateMode.always;
+                                        });
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                        side: const BorderSide(
+                                            color: Colors.white, width: 0.1),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        fontFamily: 'FontPoppins',
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
+                              const SizedBox(height: 20),
+                            ],
+                          ),
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Designed by",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 12,
+                        color:Colors.white,
+                        fontFamily: 'FontPoppins',
+                      ),
+                    ),
+                  ),
+                  Image.network(
+                    "https://saaolinfotech.com/assets/images/new/SAOOL-Infotech.png",
+                    width: MediaQuery.of(context).size.width * 0.18,
+                    height: MediaQuery.of(context).size.height * 0.05,
+                    fit: BoxFit.contain,
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

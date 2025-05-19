@@ -2,11 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:saaolhrmapp/constant/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'NotificationScreen.dart';
 import 'SplashScreen.dart';
 import 'constant/network/ApiService.dart';
 import 'data/requestdata/LiveTrackingRequest.dart';
@@ -14,13 +18,16 @@ import 'data/requestdata/LiveTrackingRequest.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await initializeNotifications();
+
   runApp(const MyApp());
   await initializeService();
   await _retryPendingCheckOut();
 }
-
 
 Future<void> initializeService() async {
   final service = FlutterBackgroundService();
@@ -37,7 +44,28 @@ Future<void> initializeService() async {
       onBackground: onIosBackground,
     ),
   );
-  service.startService(); // ✅ Start the service explicitly
+  service.startService();
+}
+
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+Future<void> initializeNotifications() async {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+  AndroidInitializationSettings('@mipmap/ic_launcher');
+  const DarwinInitializationSettings initializationSettingsIOS =
+  DarwinInitializationSettings();
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      debugPrint("Notification clicked: ${response.payload}");
+    },
+  );
 }
 
 
@@ -68,12 +96,33 @@ void onStart(ServiceInstance service) async {
       lastLocationUpdate = now1;
 
       try {
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 15),
-        );
+        Position? position;
+        int retries = 0;
+        while (retries < 2) {
+          try {
+            position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+              timeLimit: const Duration(seconds: 40),
+            );
+            break;
+          } catch (e) {
+            print("Location fetch attempt ${retries + 1} failed: $e");
+            retries++;
+            await Future.delayed(const Duration(seconds: 5));
+          }
+        }
 
-        String timestamp = DateTime.now().toIso8601String();
+        if (position == null) {
+          position = await Geolocator.getLastKnownPosition();
+          if (position == null) {
+            print("Failed to get position even after retries and fallback.");
+            return;
+          } else {
+            print("Using last known position as fallback.");
+          }
+        }
+
+        String timestamp = now1.toIso8601String();
         TrackingData trackingData = TrackingData(
           lat: position.latitude,
           long: position.longitude,
@@ -82,24 +131,21 @@ void onStart(ServiceInstance service) async {
 
         bool isOnline = await checkInternetConnection();
         if (isOnline) {
-          // ✅ Send directly to API
           await ApiService().liveTracking([trackingData]);
-          print("✅ Live tracking data sent successfully.");
-          // ✅ Send any stored offline locations
+          print("Background Live tracking data sent successfully.");
           await sendStoredLocations();
         } else {
-          // ✅ Save location locally
           await saveLocationOffline(trackingData);
-          print("❌ No internet, location saved locally.");
+          print("No internet. Location saved locally.");
         }
-      } catch (e) {
-        print("⚠️ Failed to fetch location: $e");
+
+      } catch (e, stack) {
+        print("Unexpected error during location tracking: $e\n$stack");
       }
     }
 
 
-
-
+    // Auto checkout
     String? autoCheckOutTime = prefs.getString('Auto checkOut Time');
     if (autoCheckOutTime == null || autoCheckOutTime.isEmpty) {
       print("Auto Check-Out Time is not set.");
@@ -188,7 +234,6 @@ Future<void> _autoCheckOutBackground() async {
       return;
     }
 
-
     print("Auto Check-Out Location (Background): Lat = ${position.latitude}, Long = ${position.longitude}");
     // Check internet connection
     bool hasInternet = await _hasInternetConnection();
@@ -241,13 +286,14 @@ Future<bool> _hasInternetConnection() async {
     return false;
   }
 }
+
+
 Future<void> _saveOfflineCheckOut(double lat, double lon) async {
   final prefs = await SharedPreferences.getInstance();
   String checkOutData = "$lat,$lon,${DateTime.now().toIso8601String()}";
   await prefs.setString('pendingCheckOut', checkOutData);
   print("⏳ Check-out data saved for later sync: $checkOutData");
 }
-
 Future<void> _retryPendingCheckOut() async {
   final prefs = await SharedPreferences.getInstance();
   String? pendingCheckOut = prefs.getString('pendingCheckOut');
@@ -288,8 +334,6 @@ Future<void> _retryPendingCheckOut() async {
     }
   }
 }
-
-
 Future<void> _resetTimer() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setInt("hours", 0);
@@ -298,7 +342,6 @@ Future<void> _resetTimer() async {
   print("Timer reset successfully in background.");
 
 }
-
 Future<bool> checkInternetConnection() async {
   var connectivityResult = await Connectivity().checkConnectivity();
   if (connectivityResult == ConnectivityResult.none) {
@@ -319,7 +362,6 @@ Future<void> saveLocationOffline(TrackingData trackingData) async {
 
   await prefs.setStringList("offline_locations", offlineLocations);
 }
-
 Future<void> sendStoredLocations() async {
   final prefs = await SharedPreferences.getInstance();
   List<String> offlineLocations = prefs.getStringList("offline_locations") ?? [];
@@ -342,6 +384,8 @@ Future<void> sendStoredLocations() async {
   }
 }
 
+
+
 @pragma('vm:entry-point') // ✅ Required for background execution
 bool onIosBackground(ServiceInstance service) {
   return true;
@@ -353,15 +397,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        scaffoldMessengerKey: scaffoldMessengerKey,
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const SplashScreen());
+    return Builder(builder:(context)
+    {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setupFCM(context);
+        initializeNotifications();
+      });
+      return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: scaffoldMessengerKey,
+          title: 'Saaol HRM',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.primaryColor),
+            useMaterial3: true,
+          ),
+          home: const SplashScreen());
+    });
   }
 }
 

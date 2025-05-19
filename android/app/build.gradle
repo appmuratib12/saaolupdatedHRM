@@ -2,15 +2,13 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
     id 'com.google.gms.google-services'
 
 }
 
-
 android {
-    namespace = "com.example.SaaolHRM"
+    namespace = "com.saaolhrm.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -24,48 +22,43 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.SaaolHRM"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.saaolhrm.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode 1
+        versionName "1.0.0"
+        minSdkVersion 21
+
     }
 
-  /*  signingConfigs {
+    signingConfigs {
         release {
             storeFile file("key.jks")
             storePassword "123456"
             keyAlias "key"
             keyPassword "123456"
         }
-    }*/
-
+    }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
             minifyEnabled true // Optional for smaller APK
             shrinkResources true // Opt
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
         }
     }
 }
 
-
 flutter {
     source = "../.."
 }
 
-
-
 dependencies {
+
     implementation "com.google.firebase:firebase-messaging"
-    implementation platform('com.google.firebase:firebase-bom:33.10.0')
+    implementation platform('com.google.firebase:firebase-bom:33.13.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
 

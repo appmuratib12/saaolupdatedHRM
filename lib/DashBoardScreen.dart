@@ -20,6 +20,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:ui' as ui;
 
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -74,8 +75,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       print('Locality:$locality');
     });
   }
-
-
   Future<void> _loadSavedTime() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? savedTime = prefs.getString('TotalTiming');  // Manual checkout time
@@ -147,8 +146,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     });
   }
-
-
   void showThankYouDialog(BuildContext context, VoidCallback onConfirm) {
     showDialog(
       context: context,
@@ -255,12 +252,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
   }
-
-
   void _handleCheckOut() {
     _checkOut();
   }
-
   void _stopTimerWithConfirmation() {
     showThankYouDialog(context, _handleCheckOut);
   }
@@ -279,7 +273,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
   final ApiService _apiService = ApiService();
-
   void _startForegroundLocationTracking() {
     _foregroundLocationTimer?.cancel(); // Cancel existing timer
     _foregroundLocationTimer = Timer.periodic(const Duration(minutes: 1), (timer) async {
@@ -296,7 +289,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       try {
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 10),
+          timeLimit: const Duration(seconds:30),
         );
         print("Foreground Tracking Location: ${position.latitude}, ${position.longitude}");
         String timestamp = DateTime.now().toIso8601String();
@@ -315,7 +308,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _stopForegroundLocationTracking() {
     _foregroundLocationTimer?.cancel();
   }
-
 
   Future<void> _loadSavedTime1() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -369,6 +361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
 
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -399,14 +392,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     try {
-
-      Position? position;
-      // **Step 3: Try Last Known Location (Faster)**
-      position = await Geolocator.getLastKnownPosition();
-      position ??= await Geolocator.getCurrentPosition(
+      final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds:30), // Timeout in 10 seconds
+        timeLimit: const Duration(seconds: 30),
       );
+
       print("Current Location: Lat = ${position.latitude}, Long = ${position.longitude}");
 
         List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -435,21 +425,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
-
-      double checkLat = 28.461428;
-      double checkLong = 77.152905;
-      print("Manual Location: Lat = $checkLat, Long = $checkLong");
-      //await _apiService.checkIn(checkLat,checkLong,context);
-       bool isCheckInSuccessful = await _apiService.checkIn(
-           checkLat.toString(),
-           checkLong.toString(),context);
+      bool isCheckInSuccessful = await _apiService.checkIn(
+          position.latitude.toString(),
+          position.longitude.toString(),context);
 
       if(isCheckInSuccessful){
-
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setBool("is_checked_in", true);
         DateTime now = DateTime.now();
-        await prefs.setString("check_in_time", now.toIso8601String());
+        await prefs.setString("check_in_time",now.toIso8601String());
         print('check_in_time:${now.toIso8601String()}');
         String? totalWorkingTime = prefs.getString('TotalWorking Time');
         await FlutterBackgroundService().startService();
@@ -471,10 +455,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _address = "Error fetching location.";
-      });
+      print("Error getting current location: $e");
+      _showSnackBar("Unable to fetch location. Please try again.", Colors.red);
     }finally {
       setState(() => _isLoading = false);
     }
@@ -496,8 +478,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-
   void _startTimer() {
     setState(() => _isRunning = true);
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
@@ -521,7 +501,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       await prefs.setInt("seconds", _seconds);
     });
   }
-
   void _stopTimer() {
     _timer?.cancel();
     setState(() {
@@ -533,8 +512,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _address = "Fetching location...";
     });
   }
-
-
   Future<void> _checkOut() async {
     setState(() {
       _isLoading = true;
@@ -570,19 +547,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
-      Position? position;
+      Position position;
       try {
         position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds:20),);
+          timeLimit: const Duration(seconds:30),);
       } catch (e) {
-        position = await Geolocator.getLastKnownPosition();
-      }
-      if (position == null) {
-        _showSnackBar('Unable to fetch location. Try again.', Colors.red);
+        _showSnackBar('Unable to fetch current location. Please try again.', Colors.red);
         setState(() => _isLoading = false);
         return;
       }
+
       print("Check-out Location: Lat = ${position.latitude}, Long = ${position.longitude}");
 
         List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -599,16 +574,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _addCurrentLocationMarker();
         });
 
-      double checkLat = 28.461428;
-      double checkLong = 77.152905;
-      print("Manual Location: Lat = $checkLat, Long = $checkLong");
-
-      bool isCheckOutSuccessful = await _apiService.checkOut(
-          checkLat.toString(),
-          checkLong.toString(),context);
+        bool isCheckOutSuccessful = await _apiService.checkOut(
+         position.latitude.toString(),position.longitude.toString(),context);
 
       if(isCheckOutSuccessful){
-        // Only proceed if check-out is successful
         SharedPreferences prefs = await SharedPreferences.getInstance();
         String? totalWorkingTime = prefs.getString('TotalWorking Time checkOut');
         String formattedTime = "$_hours HRS : $_minutes MINS : $_seconds SECS";
@@ -656,6 +625,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+
   void _startAutoCheckOutListener() {
     Timer.periodic(const Duration(seconds: 1), (timer) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -666,25 +636,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
-      // Debugging: Print stored time
       print("Stored Auto Check-Out Time: $autoCheckOutTime");
-      // Get current time
       DateTime now = DateTime.now();
       String currentTime = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-
-      // Extract only HH:mm (ignoring seconds)
       List<String> timeParts = autoCheckOutTime.split(':');
       if (timeParts.length < 2) {
         print("Invalid format for Auto Check-Out Time.");
         return;
       }
       String targetTime = "${timeParts[0].padLeft(2, '0')}:${timeParts[1].padLeft(2, '0')}";
-
-      // Debugging: Print comparison
       print("Current Time: $currentTime");
       print("Target Time: $targetTime");
-
-      // Check if it's time for auto check-out
       if (currentTime == targetTime) {
         print("Auto Check-Out Triggered!");
         timer.cancel(); // Stop timer after execution
@@ -692,73 +654,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     });
   }
-
-  /*Future<void> _autoCheckOut() async {
-    setState(() {
-      _isLoading = true;
-      _address = "Fetching location...";
-    });
-
-    try {
-      bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!isLocationEnabled) {
-        Fluttertoast.showToast(
-          msg: "Please enable GPS for check-out.",
-          gravity: ToastGravity.BOTTOM,
-        );
-        await Geolocator.openLocationSettings();
-        setState(() => _isLoading = false);
-        return;
-      }
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-      print("Auto checkOut Location: Lat = ${position.latitude}, Long = ${position.longitude}");
-      await _apiService.autoCheckOut(position.latitude.toString(), position.longitude.toString());
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool("is_checked_in", false);
-      String? totalWorkingTime = prefs.getString('TotalWorking Time checkOut');
-      //String? totalWorkingTime1 = prefs.getString('AutoCheckOutTime');
-      //String formattedTime = "$_hours HRS : $_minutes MINS : $_seconds SECS";
-      //String formattedTime1 = "$_hours:$_minutes:$_seconds";
-     // await prefs.setString('TotalTiming', formattedTime);
-      //await prefs.setString('workingTime', formattedTime1);
-
-      setState(() {
-       // _totalTime = totalWorkingTime1!;
-         //workingTime = totalWorkingTime ?? "No time";
-        _stopTimer();
-        _timer?.cancel(); // Ensure the timer is cancelled
-        _isLoading = false;
-      });
-      FlutterBackgroundService().invoke("stop_service");
-      _stopForegroundLocationTracking(); // Stop foreground tracking
-      print("Auto Check-Out Completed, service stopped.");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Auto Checkout Successfully',
-            style:TextStyle(fontWeight:FontWeight.w600,
-                fontFamily:'FontPoppins',fontSize:16,color:Colors.white),),
-          backgroundColor:AppColors.gradientBG,
-          duration: Duration(seconds: 3),
-        ),);
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _address = "Error fetching location.";
-      });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Auto Check-Out Failed. Try again.',
-          style:TextStyle(fontWeight:FontWeight.w500,
-              fontFamily:'FontPoppins',fontSize:16,color:Colors.white),),
-        backgroundColor:Colors.red,
-        duration: Duration(seconds: 3),
-      ),);
-    }
-  }*/
-
-
-
   Future<void> _autoCheckOut() async {
     setState(() {
       _isLoading = true;
@@ -863,7 +758,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-
   String? firstLogin;
 
   String formatTime(String? time) {
@@ -890,8 +784,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await fi.image.toByteData(format: ui.ImageByteFormat.png);
     return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
-
-
   void _addCurrentLocationMarker() async {
     if (_currentPosition != null) {
       final BitmapDescriptor customIcon = await _getCustomMarker();
@@ -927,17 +819,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String formattedDate = DateFormat('dd MMM yyyy').format(DateTime.now());
     return Scaffold(
       backgroundColor: Colors.grey[200],
-     /* floatingActionButton:FloatingActionButton(
-        backgroundColor: AppColors.gradientBG,
+      /*floatingActionButton: FloatingActionButton(
+        backgroundColor:AppColors.primaryColor,
         onPressed: () {
           Navigator.push(
             context,
-            CupertinoPageRoute(
-                builder: (context) => const LeaveRequestScreen()
-            ),
+            MaterialPageRoute(builder: (context) => const LeaveRequestScreen()),
           );
         },
-        child: const Icon(Icons.add, color: Colors.white),
+        child:const Icon(Icons.add,color:Colors.white,size:22,),  // Plus sign icon
       ),*/
       body: Stack(
         children: [
@@ -1242,19 +1132,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       } else if (snapshot.hasError) {
-                        print('Error fetching centers: ${snapshot.error}');
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.userActivity == null || snapshot.data!.userActivity!.isEmpty) {
-                        return const Padding(padding: EdgeInsets.all(20),
-                          child:Center(
-                            child: Text(
-                              'No Data available.',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'FontPoppins',
-                                fontSize: 16,
-                                color: Colors.black87,
+                        final errorMessage = snapshot.error.toString();
+                        if (errorMessage.contains('No internet connection')) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.wifi_off_rounded,
+                                    size:30,
+                                    color: Colors.redAccent,
+                                  ),
+                                  SizedBox(height:8),
+                                  Text(
+                                    'No Internet Connection',
+                                    style: TextStyle(
+                                      fontSize:14,
+                                      fontFamily: 'FontPoppins',
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Please check your network settings and try again.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize:12,
+                                      fontFamily: 'FontPoppins',
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
+                          );
+                        } else {
+                          return Center(child: Text('Error: $errorMessage'));
+                        }
+                        print('Error fetching centers: ${snapshot.error}');
+                      } else if (!snapshot.hasData || snapshot.data!.userActivity == null || snapshot.data!.userActivity!.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(height: 12),
+                                Icon(
+                                  Icons.hourglass_empty,
+                                  size:30,
+                                  color:AppColors.primaryColor
+                                ),
+                                SizedBox(height:10),
+                                Text(
+                              'No Activity Data Available',
+                              style: TextStyle(
+                                fontSize:14,
+                                fontFamily: 'FontPoppins',
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Please check back later.\nNew data will be available soon!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize:12,
+                                    fontFamily: 'FontPoppins',
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );

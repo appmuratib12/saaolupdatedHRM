@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'HelpSupportScree.dart';
 import 'LoginScreen.dart';
-import 'PrivacyPolicyScreen.dart';
 import 'constant/ConstantValues.dart';
 import 'constant/app_colors.dart';
 import 'constant/network/ApiService.dart';
@@ -247,35 +246,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           thickness: 0.2,
                         ),
                         _buildInfoText('Email',userEmail.toString()),
-                       /* Divider(
-                          height: screenHeight * 0.03,
-                          color: Colors.black87,
-                          thickness: 0.2,
-                        ),*/
-                       /* const Text(
-                          'Conveyance',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontFamily: 'FontPoppins',
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.01),*/
-                       /* const Row(
-                          children: [
-                            Icon(Icons.car_crash,color:AppColors.primaryColor,size:20,),
-                            SizedBox(width:10,),
-                            Text(
-                              'Cab',
-                              style: TextStyle(
-                                  fontFamily: 'FontPoppins',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: AppColors.gradientBG),
-                            ),
-                          ],
-                        ),*/
                       ],
                     ),
                   ),
@@ -302,45 +272,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         /*GestureDetector(
-                          onTap: () {},
-                          child: const Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.list_alt_outlined,
-                                    size: 25,
-                                    color: AppColors.primaryColor,
-                                  ),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      'Attendance Report',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontFamily: 'FontPoppins',
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black),
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    color: Colors.black,
-                                    size: 14,
-                                  )
-                                ],
-                              ),
-                              Divider(
-                                height: 30,
-                                color: Colors.black87,
-                                thickness: 0.2,
-                              ),
-                            ],
-                          ),
-                        ),*/
-                        GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
@@ -386,7 +317,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               ),
                             ],
                           ),
-                        ),
+                        ),*/
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -434,6 +365,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(height:15),
                         GestureDetector(
                           onTap: () {
                             _showLogoutPopup(context);
@@ -465,7 +397,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ],
                           ),
                         ),
-
                       ],
                     ),
                   ),
@@ -585,7 +516,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   );
                 },
               ),
-            )
+            ),
           ],
         );
       },

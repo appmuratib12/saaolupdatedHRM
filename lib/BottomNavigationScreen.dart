@@ -21,17 +21,6 @@ class BottomNavigationScreen extends StatefulWidget {
       ),
       label: 'Home',
     ),
-    /*const NavigationDestination(
-      selectedIcon: Icon(
-        Icons.calendar_month,
-        color:AppColors.primaryColor,
-      ),
-      icon: Icon(
-        Icons.calendar_month_outlined,
-        color: Colors.white,
-      ),
-      label: 'Task',
-    ),*/
     const NavigationDestination(
       selectedIcon: Icon(
         Icons.access_time,
@@ -65,7 +54,6 @@ class _BottomNavigationScreenState extends State<BottomNavigationScreen> {
 
   final pages = [
     const DashboardScreen(),
-    // const TaskScreen(),
     const AttendanceScreen(),
     const MyProfileScreen(),
   ];
@@ -124,7 +112,6 @@ class _BottomNavigationScreenState extends State<BottomNavigationScreen> {
               height: 60,
               elevation: 0,
               backgroundColor: Colors.transparent,
-              // Transparent to allow gradient
               onDestinationSelected: (int index) {
                 setState(() {
                   currentIndex = index;

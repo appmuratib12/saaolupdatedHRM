@@ -15,7 +15,7 @@ class AttendanceScreen extends StatefulWidget {
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final DateFormat apiDateFormat =
-      DateFormat('yyyy/MM'); // Format for API request
+      DateFormat('yyyy/MM'); // Format for APxI request
   final DateFormat displayDateFormat =
       DateFormat('MMMM yyyy'); // Format for display
   String selectedDate = DateFormat('yyyy/MM')
