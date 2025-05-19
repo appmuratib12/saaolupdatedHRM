@@ -45,6 +45,7 @@ android {
             signingConfig = signingConfigs.release
             minifyEnabled true // Optional for smaller APK
             shrinkResources true // Opt
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
         }
     }

@@ -146,8 +146,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     });
   }
-
-
   void showThankYouDialog(BuildContext context, VoidCallback onConfirm) {
     showDialog(
       context: context,
@@ -426,9 +424,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _isLoading = false);
         return;
       }
-       bool isCheckInSuccessful = await _apiService.checkIn(
+
+      bool isCheckInSuccessful = await _apiService.checkIn(
           position.latitude.toString(),
-           position.longitude.toString(),context);
+          position.longitude.toString(),context);
 
       if(isCheckInSuccessful){
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -462,8 +461,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() => _isLoading = false);
     }
   }
-
-
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
